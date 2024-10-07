@@ -1,1 +1,6 @@
 *.exe
+*.aux
+*.fdb_latexmk
+*.log
+*.gz
+*.fls
