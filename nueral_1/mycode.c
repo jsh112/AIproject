@@ -20,7 +20,7 @@ int ReadLayerInfo(FILE *file, int *nLayer, int **NodeInfo, Layer **Layers)
     }
     // Reading the number of layers
     fscanf(file, "%d", nLayer);
-    *NodeInfo = (int *)malloc(sizeof(int) * *nLayer);
+    *NodeInfo = (int *)malloc(sizeof(int) * (*nLayer));
 
     // Reading the number of nodes in each layer
     for (int i = 0; i < *nLayer; i++)
@@ -29,7 +29,7 @@ int ReadLayerInfo(FILE *file, int *nLayer, int **NodeInfo, Layer **Layers)
     }
 
     // Dynamic allocation of layer array
-    *Layers = (Layer *)malloc((*nLayer) * sizeof(Layer)); // 모든 레이어에 대해 메모리 할당
+    *Layers = (Layer *)malloc((*nLayer) * sizeof(Layer));
     return 0;
 }
 
@@ -70,14 +70,14 @@ void ReadInputValues(FILE *file, int *NodeInfo, Layer *layers)
     }
 }
 
-float roundToFourDecimals(float value)
+float roundToDecimals(float value)
 {
-    return roundf(value * 10000) / 10000; // 4자리로 반올림
+    return roundf(value * 10000) / 10000;
 }
 
 float sigmoid(float sum)
 {
-    return roundToFourDecimals(1.0 / (1.0 + exp(-sum))); // sigmoid 값을 계산하고 반올림
+    return roundToDecimals(1.0 / (1.0 + exp(-sum)));
 }
 
 // Forward propagation
@@ -92,7 +92,7 @@ void ForwardPropagation(int nLayer, Layer *layers)
             {
                 sum += layers[i].input[k] * layers[i].weights[j][k];
             }
-            layers[i + 1].input[j] = sigmoid(sum); // Next layer's input is this layer's output
+            layers[i + 1].input[j] = roundToDecimals(sum); // Next layer's input is this layer's output
         }
     }
 }
@@ -100,10 +100,10 @@ void ForwardPropagation(int nLayer, Layer *layers)
 // Print the final layer's input
 void PrintOutputLayer(int nLayer, Layer *layers)
 {
-    int OutputLayerIndex = nLayer - 1; // 마지막 레이어의 인덱스
+    int OutputLayerIndex = nLayer - 1;
     printf("Values for the Output layer (Layer %d):\n", OutputLayerIndex);
 
-    for (int i = 0; i < layers[OutputLayerIndex - 1].nextSize; i++) // 이전 레이어의 nextSize가 마지막 레이어의 input 크기
+    for (int i = 0; i < layers[OutputLayerIndex - 1].nextSize; i++)
     {
         printf("Output %d: %.4f\n", i + 1, layers[OutputLayerIndex].input[i]);
     }
