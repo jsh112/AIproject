@@ -13,11 +13,6 @@ typedef struct Layer
 // Read nLayer, NodeInfo array, Layers array
 int ReadLayerInfo(FILE *file, int *nLayer, int **NodeInfo, Layer **Layers)
 {
-    if (file == NULL)
-    {
-        perror("Reading file fail");
-        return 1;
-    }
     // Reading the number of layers
     fscanf(file, "%d", nLayer);
     *NodeInfo = (int *)malloc(sizeof(int) * (*nLayer));
@@ -55,8 +50,12 @@ void AllocateWeights(FILE *file, int nLayer, int *NodeInfo, Layer *layers)
             }
         }
 
-        layers[i + 1].input = (float *)malloc(sRow * sizeof(float)); // 다음 레이어의 input 메모리 할당
+        layers[i + 1].input = (float *)malloc(sRow * sizeof(float)); // Allocate memory for the input of the next layer.
     }
+    int OutPutLayerIndex = nLayer - 1;
+    layers[OutPutLayerIndex].currentSize = NodeInfo[OutPutLayerIndex];
+    layers[OutPutLayerIndex].nextSize = 0;
+    layers[OutPutLayerIndex].weights = NULL;
 }
 
 // Read input values into the first layer's input
@@ -93,7 +92,9 @@ void ForwardPropagation(int nLayer, Layer *layers)
                 sum += layers[i].input[k] * layers[i].weights[j][k];
             }
             layers[i + 1].input[j] = roundToDecimals(sum); // Next layer's input is this layer's output
+            printf("%.4f ", layers[i + 1].input[j]);
         }
+        printf("\n");
     }
 }
 
@@ -101,7 +102,7 @@ void ForwardPropagation(int nLayer, Layer *layers)
 void PrintOutputLayer(int nLayer, Layer *layers)
 {
     int OutputLayerIndex = nLayer - 1;
-    printf("Values for the Output layer (Layer %d):\n", OutputLayerIndex);
+    printf("Values for the Output layer (Layer %d):\n", OutputLayerIndex + 1);
 
     for (int i = 0; i < layers[OutputLayerIndex - 1].nextSize; i++)
     {
@@ -111,14 +112,17 @@ void PrintOutputLayer(int nLayer, Layer *layers)
 
 void FreeMemory(int nLayer, Layer *layers, int *NodeInfo)
 {
-    for (int i = 0; i < nLayer - 1; i++)
+    for (int i = 0; i < nLayer; i++)
     {
         free(layers[i].input);
-        for (int j = 0; j < layers[i].nextSize; j++)
+        if (i < nLayer - 1)
         {
-            free(layers[i].weights[j]);
+            for (int j = 0; j < layers[i].nextSize; j++)
+            {
+                free(layers[i].weights[j]);
+            }
+            free(layers[i].weights);
         }
-        free(layers[i].weights);
     }
     free(NodeInfo);
     free(layers);
