@@ -6,3 +6,6 @@
 *.fls
 *.png
 .vscode
+*.pkl
+__pychache__
+*.pyc
