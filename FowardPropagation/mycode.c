@@ -91,7 +91,7 @@ void ForwardPropagation(int nLayer, Layer *layers)
             {
                 sum += layers[i].input[k] * layers[i].weights[j][k];
             }
-            layers[i + 1].input[j] = roundToDecimals(sum); // Next layer's input is this layer's output
+            layers[i + 1].input[j] = sigmoid(sum); // Next layer's input is this layer's output
             printf("%.4f ", layers[i + 1].input[j]);
         }
         printf("\n");
