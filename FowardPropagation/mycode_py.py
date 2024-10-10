@@ -9,12 +9,13 @@ class NeuralNetwork:
         nLayer = json_data['n']
         NodeInfo = json_data['numbers']
         inputs = json_data['input']
+        targets = json_data['target']
+
         self.size = nLayer
         self.NodeInfo = NodeInfo
         self.input = np.array(inputs).T
         self.weight = [np.random.randn(
             self.NodeInfo[i+1], self.NodeInfo[i]) for i in range(self.size-1)]
-        self.ForwardPropagation()
 
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -23,9 +24,11 @@ class NeuralNetwork:
         for i in range(self.size-1):
             self.input = self.sigmoid(np.dot(self.weight[i], self.input))
 
-    def BackPropagation(self):
+    # def BackPropagation(self):
 
 
 nn = NeuralNetwork()
+nn.ForwardPropagation()
+
 np.set_printoptions(precision=4, suppress=True)
 print(f"{nn.input}")
