@@ -26,12 +26,18 @@ class NeuralNetwork:
     def ForwardPropagation(self):
         for i in range(self.size-1):
             self.input = self.sigmoid(np.dot(self.weight[i], self.input))
+            # append input
 
     def BackPropagation(self):
+        """ 
         for i in range(self.size-2, -1, -1):
             for j in range(self.weight[i].shape[0]):
                 for k in range(self.weight[i].shape[1]):
-                    self.weight[i][j][k] -= -2 * (self.target[i] - input)
+                    self.weight[i][j][k] -= -2 * (self.target[i] - input) 
+        """
+        """
+            
+        """
 
 
 nn = NeuralNetwork(0.01)
