@@ -9,6 +9,7 @@
  * @param nextSize Number of nodes in the next layer.
  * @param weights Weights matrix [next_size x current_size].
  * @param input Input values stored (from previous layer or initial input).
+ * @param delta
  */
 
 typedef struct Layer
@@ -17,7 +18,68 @@ typedef struct Layer
     int nextSize;
     float **weights;
     float *input;
+    float *delta;
 } Layer;
+
+int ReadLayerInfo(FILE *file, int *nLayer, int **NodeInfo, Layer **Layers);
+void AllocateWeights(FILE *file, int nLayer, int *NodeInfo, Layer *layers);
+void ReadInputValues(FILE *file, int sInput, Layer *layers);
+void ReadTargetValues(FILE *file, int NodeOutput, float *target);
+float roundToDecimals(float value);
+float sigmoid(float sum);
+void ForwardPropagation(int nLayer, Layer *layers);
+void BackPropagation(int nLayer, Layer *layers);
+void PrintOutputLayer(int nLayer, Layer *layers);
+void FreeMemory(int nLayer, Layer *layers, int *NodeInfo, float *target);
+
+/**
+ * @brief Main function to execute the neural network program.
+ *
+ * @return int Returns 0 on successful execution.
+ */
+int main()
+{
+    int nLayer, *NodeInfo;
+    Layer *Layers;
+    float *targets;
+    char filename[100];
+    scanf("%s", filename);
+    FILE *file = fopen(filename, "r");
+
+    if (file == NULL)
+    {
+        perror("Error opening file");
+        return 1;
+    }
+
+    if (ReadLayerInfo(file, &nLayer, &NodeInfo, &Layers) != 0)
+    {
+        fclose(file);
+        return 1;
+    }
+
+    AllocateWeights(file, nLayer, NodeInfo, Layers);
+    int sInput = NodeInfo[0];
+    ReadInputValues(file, sInput, Layers);
+    // ----------------------------------------------
+    int Nodeoutput = NodeInfo[nLayer - 1];
+    targets = (float *)malloc(sizeof(float) * Nodeoutput);
+    ReadTargetValues(file, Nodeoutput, targets);
+    // ----------------------------------------------
+
+    fclose(file);
+
+    // Perform forward propagation
+    ForwardPropagation(nLayer, Layers);
+
+    // Print the final layer's input values (output of the network)
+    PrintOutputLayer(nLayer, Layers);
+
+    // Free allocated memory
+    FreeMemory(nLayer, Layers, NodeInfo, targets);
+
+    return 0;
+}
 
 /**
  * @brief Reads layer information from the specified file.
@@ -121,7 +183,7 @@ void ReadTargetValues(FILE *file, int NodeOutput, float *target)
  */
 float roundToDecimals(float value)
 {
-    return roundf(value * 10000) / 10000;
+    return roundf(value * 100000000) / 100000000;
 }
 
 /**
@@ -153,14 +215,10 @@ void ForwardPropagation(int nLayer, Layer *layers)
                 sum += layers[i].input[k] * layers[i].weights[j][k];
             }
             layers[i + 1].input[j] = sigmoid(sum); // Next layer's input is this layer's output
-            printf("%.4f ", layers[i + 1].input[j]);
+            printf("%.8f ", layers[i + 1].input[j]);
         }
         printf("\n");
     }
-}
-
-void BackPropagation(int nLayer, Layer *layers)
-{
 }
 
 /**
@@ -176,8 +234,12 @@ void PrintOutputLayer(int nLayer, Layer *layers)
 
     for (int i = 0; i < layers[OutputLayerIndex - 1].nextSize; i++)
     {
-        printf("Output %d: %.4f\n", i + 1, layers[OutputLayerIndex].input[i]);
+        printf("Output %d: %.8f\n", i + 1, layers[OutputLayerIndex].input[i]);
     }
+}
+
+void BackPropagation(int nLayer, Layer *layers)
+{
 }
 
 /**
@@ -204,53 +266,4 @@ void FreeMemory(int nLayer, Layer *layers, int *NodeInfo, float *target)
     free(target);
     free(NodeInfo);
     free(layers);
-}
-
-/**
- * @brief Main function to execute the neural network program.
- *
- * @return int Returns 0 on successful execution.
- */
-int main()
-{
-    int nLayer, *NodeInfo;
-    Layer *Layers;
-    float *targets;
-    char filename[100];
-    scanf("%s", filename);
-    FILE *file = fopen(filename, "r");
-
-    if (file == NULL)
-    {
-        perror("Error opening file");
-        return 1;
-    }
-
-    if (ReadLayerInfo(file, &nLayer, &NodeInfo, &Layers) != 0)
-    {
-        fclose(file);
-        return 1;
-    }
-
-    AllocateWeights(file, nLayer, NodeInfo, Layers);
-    int sInput = NodeInfo[0];
-    ReadInputValues(file, sInput, Layers);
-    // ----------------------------------------------
-    int Nodeoutput = NodeInfo[nLayer - 1];
-    targets = (float *)malloc(sizeof(float) * Nodeoutput);
-    ReadTargetValues(file, Nodeoutput, targets);
-    // ----------------------------------------------
-
-    fclose(file);
-
-    // Perform forward propagation
-    ForwardPropagation(nLayer, Layers);
-
-    // Print the final layer's input values (output of the network)
-    PrintOutputLayer(nLayer, Layers);
-
-    // Free allocated memory
-    FreeMemory(nLayer, Layers, NodeInfo, targets);
-
-    return 0;
 }
