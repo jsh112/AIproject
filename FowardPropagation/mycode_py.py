@@ -1,50 +1,100 @@
 import numpy as np
-import json
-import sympy as sp
 
 
-class NeuralNetwork:
-    def __init__(self, learning_rate=0.001):
-        with open('C:/AI_project/FowardPropagation/info.json', 'r') as file:
-            json_data = json.load(file)
-        nLayer = json_data['n']
-        NodeInfo = json_data['numbers']
-        inputs = json_data['input']
-        targets = json_data['target']
-
-        self.size = nLayer
-        self.NodeInfo = NodeInfo
-        self.input = np.array(inputs).T
-        self.learning_rate = learning_rate
-        self.target = targets
-        self.weight = [np.random.randn(
-            self.NodeInfo[i+1], self.NodeInfo[i]) for i in range(self.size-1)]
-
-    def sigmoid(self, x):
-        return 1 / (1 + np.exp(-x))
-
-    def ForwardPropagation(self):
-        for i in range(self.size-1):
-            self.input = self.sigmoid(np.dot(self.weight[i], self.input))
-            # append input
-
-    def BackPropagation(self):
-        """ 
-        for i in range(self.size-2, -1, -1):
-            for j in range(self.weight[i].shape[0]):
-                for k in range(self.weight[i].shape[1]):
-                    self.weight[i][j][k] -= -2 * (self.target[i] - input) 
-        """
-        """
-            
-        """
+class Layer:
+    def __init__(self, currentSize, nextSize):
+        self.currentSize = currentSize
+        self.nextSize = nextSize
+        self.weights = np.zeros(
+            (self.nextSize, self.currentSize)) if nextSize > 0 else None
+        self.input = np.zeros(currentSize)
+        self.delta = np.zeros(currentSize) if nextSize > 0 else None
 
 
-nn = NeuralNetwork(0.01)
-nn.ForwardPropagation()
+def ReadLayerInfo(lines):
+    nLayer = int(lines[0].strip())
+    NodeInfo = [int(x) for x in lines[1].split()]
+    Layers = []
 
-np.set_printoptions(precision=4, suppress=True)
-print(f"{nn.input}")
+    for i in range(nLayer):
+        currentSize = NodeInfo[i]
+        nextSize = NodeInfo[i + 1] if i < nLayer - 1 else 0
+        layer = Layer(currentSize, nextSize)
+        layer.input = np.zeros(currentSize)
+        Layers.append(layer)
+    return nLayer, NodeInfo, Layers
 
-# x = sp.symbols('x')
-# print(sp.diff(1/(1+sp.exp(-x))))  # f'(x) = f(x) * (1 - f(x))
+
+def allocate_weights(lines, Layers):
+    index = 2
+    weights = [float(x) for x in ' '.join(lines[index:]).split()]
+    weight_index = 0
+
+    for i in range(len(Layers) - 1):
+        sRow = Layers[i].nextSize
+        sCol = Layers[i].currentSize
+        expected_weights = sRow * sCol
+
+        layer_weights = np.array(
+            weights[weight_index:weight_index + expected_weights]).reshape(sRow, sCol)
+        Layers[i].weights = layer_weights
+        weight_index += expected_weights
+
+        print(f"Weights for Layer {i} (shape {Layers[i].weights.shape}):")
+        print(Layers[i].weights)
+
+
+def ReadValues(lines, NodeInfo, layers):
+    input_values = [float(x) for x in lines[-2].strip().split()]
+    target_values = [float(x) for x in lines[-1].strip().split()]
+
+    # Check
+    if len(input_values) != NodeInfo[0]:
+        raise ValueError(
+            f'Expected {NodeInfo[0]} input values, but got {len(input_values)}')
+    if len(target_values) != NodeInfo[-1]:
+        raise ValueError(
+            f'Expected {NodeInfo[-1]} input values, but got {len(target_values)}')
+
+    layers[0].input = np.array(input_values)
+    return np.array(target_values)
+
+
+def roundToDecimals(value):
+    return round(value * 100000000) / 100000000
+
+
+def sigmoid(sum):
+    return roundToDecimals(1.0 / (1.0 + np.exp(-sum)))
+
+
+def ForwardPropagation(nLayer, Layers):
+    for i in range(nLayer - 1):
+        for j in range(Layers[i].nextSize):
+            sum = 0.0
+            for k in range(Layers[i].currentSize):
+                sum += (Layers[i].input[k] * Layers[i].weights[j][k])
+            Layers[i+1].input[j] = sigmoid(sum)
+            print(f'{Layers[i + 1].input[j]:.8f} ', end='')
+        print()
+
+
+def main():
+    filename = input("Enter filename : ")
+    with open(filename, 'r') as file:
+        # Like FILE *file
+        lines = file.readlines()
+
+    nLayer, NodeInfo, Layers = ReadLayerInfo(lines)
+
+    allocate_weights(lines, Layers)
+
+    target = ReadValues(lines, NodeInfo, Layers)
+    print(f'input = {Layers[0].input}')
+    print(f'target = {target}')
+
+    ForwardPropagation(nLayer, Layers)
+
+
+if __name__ == '__main__':
+    main()

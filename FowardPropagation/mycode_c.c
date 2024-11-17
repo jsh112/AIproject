@@ -25,7 +25,7 @@ int ReadLayerInfo(FILE *file, int *nLayer, int **NodeInfo, Layer **Layers);
 void AllocateWeights(FILE *file, int nLayer, int *NodeInfo, Layer *layers);
 void ReadInputValues(FILE *file, int sInput, Layer *layers);
 void ReadTargetValues(FILE *file, int NodeOutput, float *target);
-float roundToDecimals(float value);
+double roundToDecimals(double value);
 float sigmoid(float sum);
 void ForwardPropagation(int nLayer, Layer *layers);
 void BackPropagation(int nLayer, Layer *layers);
@@ -181,9 +181,9 @@ void ReadTargetValues(FILE *file, int NodeOutput, float *target)
  * @param value The float value to be rounded.
  * @return float The rounded value.
  */
-float roundToDecimals(float value)
+double roundToDecimals(double value)
 {
-    return roundf(value * 100000000) / 100000000;
+    return round(value * 100000000) / 100000000;
 }
 
 /**
